@@ -1,0 +1,87 @@
+#include <iostream>
+#include <stdio.h>
+#include <opencv\cv.h>
+#include <opencv\cxcore.h>
+#include <opencv\highgui.h>  
+#include <opencv2\imgproc\imgproc.hpp>
+
+using namespace cv;
+using namespace std;
+
+int main(int argc, char *argv[])
+{
+	Mat image;
+	image = imread(argv[1], IMREAD_COLOR); //Read the file
+	if (!image.data) {
+		cout << " Could not load the image" << std::endl;
+		return -1;
+	}
+
+	Mat gr;
+	
+	cvtColor(image, gr, CV_BGR2GRAY, 0); //Convert color image to gray
+
+	int h = gr.rows;
+	int w = gr.cols;
+	int N = h * w; //Num of pixels in the image
+	int x = 0;
+	double y = 0.0;
+	cout << "width: " << w << endl;
+	cout << "Height: " << h << endl;
+
+	Mat Heq = gr.clone(); //Copy of image for the Histogram Equalization
+
+	int his[256];
+	int val = 0;
+	double pr[256];
+	double CuPr[256];
+	int map[256];
+
+	for (int i = 0; i < 256; i++) {
+		his[i] = 0;
+		pr[i] = 0.0;
+		CuPr[i] = 0.0;
+	}
+
+	//Calculate num of pixels in each gray level
+	for (int i = 0; i < h; i++) {
+		for (int j = 0; j < w; j++) {
+			val = gr.at<uchar>(i, j);
+			his[val] = his[val] + 1;
+		}
+	}
+
+	for (int i = 0; i < 256; i++) {
+		pr[i] = (double)his[i]/N; //Calculate probability of each gray level
+
+		if (i == 0) //Calcalate cummulative probability
+			CuPr[i] = pr[i];
+		else {
+			CuPr[i] = CuPr[i - 1] + pr[i];
+		}
+
+		map[i] = cvRound(CuPr[i] * 255);  //Ola gray level to New gray level map
+	}
+
+	//Gray level transformation in the image
+	for (int i = 0; i < h; i++) {
+		for (int j = 0; j < w; j++) {
+			val = gr.at<uchar>(i, j);
+			Heq.at<uchar>(i,j) = (uchar)map[val];
+		}
+	}
+
+	namedWindow("Display window", WINDOW_AUTOSIZE); //Create a window for display
+	imshow("Display window", Heq); //Show our image inside it
+	namedWindow("Display Gray", WINDOW_AUTOSIZE); //Create a window for display
+	imshow("Display Gray", gr); //Show our image inside it
+	
+	cvWaitKey(0); //wait for a keystroke in the window
+
+	image.release();
+	gr.release();
+	Heq.release();
+
+	return 0;
+
+}

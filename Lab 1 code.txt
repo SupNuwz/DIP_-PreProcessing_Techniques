@@ -1,0 +1,31 @@
+
+#include <opencv/cv.h>
+#include <opencv/highgui.h>
+
+int main(int argc, char *argv[])
+{
+	IplImage* img;
+	img = cvLoadImage(argv[1]);
+	if (!img)
+		printf("Could not load image file: %s\n", "dog.jpg");
+	
+	int ch = img->nChannels;
+	int w = img->width;
+	int h = img->height;
+	int ws = img->widthStep;
+
+	uchar*data = (uchar*)img->imageData;
+
+	printf("No of channels:%d\n", ch);
+	printf("Width:%d\n", w);
+	printf("Height:%d\n", h);
+	printf("Width Steps:%d\n", ws);
+
+	
+	cvNamedWindow("Image");
+	cvShowImage("Image", img);
+	cvWaitKey(0);
+	cvDestroyWindow("Image");
+	cvReleaseImage(&img);
+	return 0;
+}

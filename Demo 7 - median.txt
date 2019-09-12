@@ -1,0 +1,66 @@
+#include <iostream>
+#include <stdio.h>
+#include <opencv\cv.h>
+#include <opencv\cxcore.h>
+#include <opencv\highgui.h>  
+#include <opencv2\imgproc\imgproc.hpp>
+
+using namespace cv;
+using namespace std;
+
+int main(int argc, char *argv[])
+{
+	
+	Mat image;
+	image = imread(argv[1], IMREAD_COLOR); //Read the file
+	if (!image.data) {
+		cout << " Could not load the image" << std::endl;
+		return -1;
+	}
+
+	Mat gr;
+	
+	cvtColor(image, gr, CV_BGR2GRAY, 0); //Convert color image to gray
+
+	int h = gr.rows;
+	int w = gr.cols;
+	int N = h * w; //Num of pixels in the image
+	int x = 0;
+	double y = 0.0;
+	cout << "width: " << w << endl;
+	cout << "Height: " << h << endl;
+
+	Mat med = gr.clone(); //Copy of image for the Histogram Equalization
+	int val = 0;
+	int ar1[9];
+
+	//Take median of 3X3
+	for (int i = 1; i < h-1; i++) { 
+		for (int j = 1; j < w-1; j++) {
+			int r = 0;
+			for (int t1 = -1; 1 >= t1; t1++) {
+				for (int t2 = -1; 1 >= t2; t2++) {
+					val = gr.at<uchar>(i + t1, j + t2);
+					ar1[r] = val;
+					r = r + 1;
+				}
+			}
+			sort(ar1, ar1 + 9);
+			med.at<uchar>(i, j) = (uchar)ar1[4];
+		}
+	}
+
+	namedWindow("Display window", WINDOW_AUTOSIZE); //Create a window for display
+	imshow("Display window", med); //Show our image inside it
+	namedWindow("Display Gray", WINDOW_AUTOSIZE); //Create a window for display
+	imshow("Display Gray", gr); //Show our image inside it
+	
+	cvWaitKey(0); //wait for a keystroke in the window
+
+	image.release();
+	gr.release();
+	med.release();
+
+	return 0;
+
+}

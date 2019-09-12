@@ -1,0 +1,85 @@
+
+#include <iostream>
+#include <stdio.h>
+#include <opencv\cv.h>
+#include <opencv\cxcore.h>
+#include <opencv\highgui.h>                                                   
+	//#include <opencv2\imgproc\imgproc.hpp>
+
+	using namespace cv;
+using namespace std;
+
+int main(int argc, char *argv[])
+{
+	Mat img = imread(argv[1]);
+	if (!img.data) {
+		cout << " Could not load the image" << std::endl;
+		waitKey(0);
+		return -1;
+	}
+
+
+	Mat image;
+	image = imread(argv[1], IMREAD_COLOR);//Read the file
+	if (!image.data)//Check for invalid input
+	{
+		cout << "Could not open or find the image" << std::endl;
+		return -1;
+	}
+
+	Mat gr;
+	int his[256];
+	for (int i = 0; i < 256; i++) {
+		his[i] = 0;
+	}
+
+	cvtColor(image, gr, CV_BGR2GRAY, 0);
+
+	int h = gr.rows;
+	int w = gr.cols;
+	int val = 0;
+
+	cout << "Width: " << w << endl;
+	cout << "Height: " << h << endl;
+
+	for (int i = 0; i < h; i++) {
+		for (int j = 0; j < w; j++) {
+			val = gr.at<uchar>(i, j);
+			his[val] = his[val] + 1;
+		}
+	}
+
+	int max = 0;
+	for (int i = 0; i < 256; i++) {
+		cout << "Gray level " << i << ":" << his[i] << endl;
+		if (max < his[i])
+			max = his[i];
+	}
+
+
+	cout << max << endl;
+	Mat him(301, 260, CV_8UC1, Scalar(255));
+	int hist[256];
+	double maxd = max;
+
+	for (int i = 0; i < 256; i++) {
+		hist[i] = cvRound(double(his[i] / maxd) * 300);
+		Point pt1 = Point(i, 300 - hist[i]);
+		Point pt2 = Point(i, 300);
+		line(him, pt1, pt2, Scalar(0), 1,8, 0);
+	}
+
+	namedWindow("Display window"); //create a new window with a image
+	imshow("Display window", image); //Shoe our image inside it
+	namedWindow("Display Gray", WINDOW_AUTOSIZE); //Create a window for display
+	imshow("Display Gray", gr); //Show our image inside it
+	namedWindow("Histogram", WINDOW_AUTOSIZE); //Create a window for display
+	imshow("Histogram", him); //Show our image inside it
+	waitKey(0); //wait for a key input and hold
+
+	image.release();
+	gr.release();
+	him.release();
+	return 0;
+
+}

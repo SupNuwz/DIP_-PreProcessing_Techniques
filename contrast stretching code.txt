@@ -1,0 +1,74 @@
+#include <iostream>
+#include<opencv2/highgui/highgui.hpp>
+#include<opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+
+using namespace cv;
+using namespace std;
+
+int main(int argc, char **argv)
+{
+	if (argc != 2) {
+		cout << "Usage:Display_Image_ImageToLoadAndDisplay" << endl;
+		return -1;
+	}
+
+	Mat image;
+	image = imread(argv[1], IMREAD_COLOR);
+	if (!image.data) {
+		cout << "Could not load image" << std::endl;
+		return -1;
+	}
+
+	Mat gr;
+	int his[256];
+	for (int i = 0; i < 256; i++) {
+		his[i] = 0;
+	}
+
+	cvtColor(image, gr, CV_RGB2GRAY,0);
+	int h = gr.rows;
+	int w = gr.cols;
+	int x = 0;
+	float y = 0.0;
+
+	cout << "Width:" << w << endl;
+	cout << "Height:" << h << endl;
+
+	Mat CSt = gr.clone();
+
+	for (int i = 0; i < h; i++) {
+		for (int j = 0; j < w; j++) {
+			x = (int)gr.at<uchar>(i, j);
+			y = 0.0;
+			
+			if (x < 100) {
+				y = (double)(10 / 100) * (double)(x);
+			}
+			else if (x < 121) {
+				y = (double)(235 / 21)*(double)(x - 100) + 10;
+			}
+			else
+			{
+				y = (double)(10 / 134)*double(x - 121) + 245;
+			}
+			CSt.at<uchar>(i, j) = (uchar)cvRound(y);
+		}
+		
+		
+
+		namedWindow("Display window", WINDOW_AUTOSIZE);
+		imshow("Display window", CSt);
+
+		namedWindow("Display Gray");
+		imshow("Display Gray", gr);
+
+		cvWaitKey(0);
+		cvDestroyWindow("Display window");
+		cvDestroyWindow("Display Gray");
+		image.release();
+		gr.release();
+		
+		return 0;
+	}
+}

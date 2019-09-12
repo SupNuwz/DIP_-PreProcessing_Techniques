@@ -1,0 +1,93 @@
+#include <iostream>
+#include <stdio.h>
+#include <opencv\cv.h>
+#include <opencv\cxcore.h>
+#include <opencv\highgui.h>  
+#include <opencv2\imgproc\imgproc.hpp>
+
+using namespace cv;
+using namespace std;
+
+int main(int argc, char *argv[])
+{
+
+	Mat image;
+	image = imread(argv[1], IMREAD_COLOR); //Read the file
+	int T = atoi(argv[2]);
+	if (!image.data) {
+		cout << " Could not load the image" << std::endl;
+		return -1;
+	}
+
+
+	Mat gr;
+	cvtColor(image, gr, CV_BGR2GRAY, 0); //Convert color image to gray
+
+	int h = gr.rows;
+	int w = gr.cols;
+	int val = 0;
+	int max = 0;
+
+	Mat gaussian = gr.clone();
+	int kernel = 5;
+	double sigma = 1.0;
+	double r ,s= 2 * sigma*sigma;
+	double sum = 0.0;
+	double GKernel[5][5];
+
+	//Generating 5x5 Kernel
+	for (int x = -2; x <= 2; x++) {
+		for (int y = -2; y <= 2; y++) {
+			r = sqrt(x * x + y * y);
+			GKernel[x + 2][y + 2] = (exp(-(r * r) / s)) / (3.14* s);
+			sum += GKernel[x + 2][y + 2];
+		}
+	}
+	// normalising the Kernel 
+	for (int i = 0; i < 5; ++i)
+		for (int j = 0; j < 5; ++j)
+			GKernel[i][j] /= sum;
+
+	for (int i = kernel / 2; i < h - (kernel / 2); i++) {
+		for (int j = kernel / 2; j < w - (kernel / 2); j++) {
+			int sum = 0;
+			for (int m = -kernel / 2; m <= kernel / 2; m++) {
+				for (int n = -kernel / 2; n <= kernel / 2; n++) {
+					int a = gr.at<uchar>(i + m, j + n);
+					double p = GKernel[2 + m][2 + n];
+					sum = sum + (p*a);
+				}
+			}
+
+			gaussian.at<uchar>(i, j) = (uchar)sum;
+		}
+	}
+
+	Mat sobel = gaussian.clone();
+
+	int Gx = 0;
+	int Gy = 0;
+	int G = 0;
+
+	for (int i = 1; i < gaussian.rows - 1; i++) {
+		for (int j = 1; j < gaussian.cols - 1; j++) {
+			Gx = gr.at<uchar>(i - 1, j - 1) + 2 * gr.at<uchar>(i, j - 1) + gr.at<uchar>(i + 1, j - 1) - gr.at<uchar>(i - 1, j + 1) - 2 * gr.at<uchar>(i, j + 1) - gr.at<uchar>(i + 1, j + 1);
+			Gy = gr.at<uchar>(i - 1, j - 1) + 2 * gr.at<uchar>(i - 1, j) + gr.at<uchar>(i - 1, j + 1) - gr.at<uchar>(i + 1, j - 1) - 2 * gr.at<uchar>(i + 1, j) - gr.at<uchar>(i + 1, j + 1);
+			G = abs(Gx) + abs(Gy);
+			if (G >= T) {
+				sobel.at<uchar>(i, j) = 0;
+			}
+			else {
+				sobel.at<uchar>(i, j) = 255;
+			}
+
+		}
+	}
+
+	imshow(" Orginal Image:", image);
+	imshow(" Gray Image:", gr);
+	imshow("Gausssian Smoothed", gaussian);
+	imshow("Sobel Operator", sobel);
+	cvWaitKey(0);
+	return 0;
+}

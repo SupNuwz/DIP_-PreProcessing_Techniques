@@ -1,0 +1,96 @@
+#include <iostream>
+#include <stdio.h>
+#include<cmath>
+#include <opencv\cv.h>
+#include <opencv\cxcore.h>
+#include <opencv\highgui.h>
+#include <opencv2\highgui.hpp>
+#include <opencv2\imgproc\imgproc.hpp>
+
+using namespace std;
+using namespace cv;
+
+int main(int argc, char*argv[]) {
+	Mat image;
+	image = imread(argv[1], IMREAD_COLOR); //Read the file
+	if (!image.data) {
+		cout << " Could not load the image" << std::endl;
+		return -1;
+	}
+	//Gray image and initialization
+	Mat gr;
+	
+	//Gray conversion
+	cvtColor(image, gr, CV_BGR2GRAY);
+
+	int h = gr.rows;
+	int w = gr.cols;
+	int val = 0;
+	int max = 0;
+
+	for (int i = 0; i < h; i++) {
+		for (int j = 0; j < w; j++) {
+			val = gr.at<uchar>(i, j);
+			
+		}
+	}
+
+	//Gaussian Filter
+	Mat Gaus = gr.clone();
+	int kernel = 5;
+	// intialising standard deviation to 1.0 
+	double sigma = 1.0;
+	double r = 2.0*sigma*sigma;
+	double s = 2.0*sigma*sigma;
+
+	// sum is for normalization 
+	double sum = 0.0;
+	double GKernel[5][5];
+
+	// generating 5x5 kernel 
+	for (int x = -2; x <= 2; x++) {
+		for (int y = -2; y <= 2; y++) {
+			r = sqrt(x * x + y * y);
+			GKernel[x + 2][y + 2] = (exp(-(r * r) / s)) / (3.14 * s);
+			sum += GKernel[x + 2][y + 2];
+		}
+	}
+
+	// normalising the Kernel 
+	for (int i = 0; i < 5; ++i)
+		for (int j = 0; j < 5; ++j)
+			GKernel[i][j] /= sum;
+
+
+	for (int i = 0; i < 5; ++i) {
+		for (int j = 0; j < 5; ++j)
+			cout << GKernel[i][j] << "\t";
+		cout << endl;
+	}
+
+
+	for (int i = kernel / 2; i < h - (kernel / 2); i++) {
+		for (int j = kernel / 2; j < w - (kernel / 2); j++) {
+			int sum = 0;
+			for (int m = -kernel / 2; m <= kernel / 2; m++) {
+				for (int n = -kernel / 2; n <= kernel / 2; n++) {
+					int a = gr.at<uchar>(i + m, j + n);
+					double p = GKernel[2 + m][2 + n];
+					sum = sum + (p*a);
+				}
+			}
+
+			Gaus.at<uchar>(i, j) = (uchar)sum;
+		}
+	}
+
+
+	imshow("Image:", gr);
+	imshow("Gausssian Smoothed", Gaus);
+
+	cvWaitKey(0);
+
+
+	return 0;
+
+}

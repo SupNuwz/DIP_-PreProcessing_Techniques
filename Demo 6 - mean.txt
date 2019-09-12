@@ -1,0 +1,49 @@
+#include <iostream>
+#include <stdio.h>
+#include <opencv\cv.h>
+#include <opencv\cxcore.h>
+#include <opencv\highgui.h>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/opencv.hpp>
+
+using namespace cv;
+using namespace std;
+
+int main(int argc, char *argv[])
+{
+	
+	Mat img = imread(argv[1], CV_LOAD_IMAGE_GRAYSCALE);
+	if (!img.data)
+		printf("Could not load image file: %s\n", "dog.jpg");
+
+	Mat copy = img.clone();
+	 
+	int val;
+	double avg;
+	for (int i = 1;i < img.rows - 1;i++) {
+		for (int j = 1;j < img.cols - 1;j++) { // kernal should start from vcolumn 1 and row 1
+			val = img.at<uchar>(i - 1, j - 1) + img.at<uchar>(i - 1, j) + img.at<uchar>(i - 1, j + 1) + img.at<uchar>(i, j - 1) + img.at<uchar>(i, j) + img.at<uchar>(i, j + 1) + img.at<uchar>(i, j - 1);
+			avg = (double)val / 9;
+
+			copy.at<uchar>(i, j) = (uchar)avg;
+		}
+
+
+	}
+
+
+	namedWindow("Image" ); //create a window for display
+	imshow("Image", img); //show our image inside
+	namedWindow("Mean Filter"); //create a window for display
+	imshow("Mean Filter", copy);
+
+	waitKey(0);//wait for a key stroke in the window
+	
+	
+
+
+	
+	return 0;
+}
